@@ -1,20 +1,20 @@
-// Dependencies
 const express = require("express");
-
-// Setting up Express App
 const app = express();
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 3000;
+const path = require("path");
 
-// Sets up the Express app to handle data parsing
+// Serve static content for the app from the "public" directory in the application directory.
+// the public folder becomes a route path that defaults to the localhost:3000
+
+app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static('public'));
 
-//Creating Routes
+
 require("./routes/apiRoutes")(app);
 require("./routes/htmlRoutes")(app);
 
-// Starts the server to begin listening
+
 app.listen(PORT, function() {
-    console.log("App listening on PORT " + PORT);
-  });
+  console.log("App listening on PORT " + PORT);
+});

@@ -1,48 +1,48 @@
-const fs = require("fs")
-const path = require("path");
 
-var noteData;
+const path = require('path');
+const fs = require('fs');
+let noteCount = 1;
+
+const readData = () => {
+
+    const noteData = JSON.parse(fs.readFileSync(path.join(__dirname, '../db/db.json')))
+    return noteData;
+}
+
+const writeData = (noteData) => {
+    fs.writeFileSync(path.join(__dirname, '../db/db.json'), JSON.stringify(noteData), (err) => {
+        if (err) return ({ err });
+    })
+}
+
+const newNoteId = () => noteId++;
 
 module.exports = function (app) {
-    fs.readFile("db.json", "utf8", function (err, data) {
-        if (err) throw err;
-        noteData = JSON.parse(data);
+
+    app.get("/api/notes", (req, res) => {
+
+        let noteData = readData();
+        res.json(noteData)
     })
 
-    app.get("/api/notes", function (req, res) {
-        // console.log(noteData);
-        res.json(noteData);
-    });
+    app.post('/api/notes', (req, res) => {
+        let noteData = readData();
+        let newNote = req.body;
+        let lastNoteID = !noteData[0] ? 0 : noteData[noteData.length - 1].id;
+        let newNoteID = lastNoteID + 1
 
-
-    app.post("/api/notes", function (req, res) {
-        console.log("test");
-        var newNote = req.body;
+        newNote.id = newNoteID;
         noteData.push(newNote);
-        let parsedata = JSON.stringify(noteData)
-        fs.writeFile(path.join('db.json'), parsedata, (err) => {
-            if (err) throw err;
-        })
-        // console.log(noteData);
-        res.json(noteData);
-    });
+        writeData(noteData);
+        return res.json(noteData)
+    })
 
-    app.delete("/api/notes/:id", function (req, res) {
-        console.log("erase");
-        var deleteData = req.params.id;
-        // console.log(deleteData) DOESNT KNOW WHAT IS deleteData
-        console.log(deleteData)
-        for (i=0; i<noteData.length; i++) {
-            // console.log(noteData[i])
-            if (deleteData === noteData[i].title) {
-                noteData.splice(i, 1)
-            };
-        };
-        let parsedata = JSON.stringify(noteData)
-        // deleted __dirname from path.join
-        fs.writeFile(path.join('db.json'), parsedata, (err) => {
-           if (err) throw err;
-       })
-        console.log(noteData)
-        res.json(noteData)
-    })}
+    app.delete('/api/notes/:id', (req, res) => {
+        let noteData = readData();
+        const noteId = req.params.id;
+        const newNoteData = noteData.filter((note) => note.id != noteId);
+
+        writeData(newNoteData);
+        res.send(newNoteData);
+    })
+}
